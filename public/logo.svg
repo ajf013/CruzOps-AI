@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="200" height="200" fill="transparent" rx="40" />
+
+  <!-- The Cloud / Azure Shape -->
+  <path 
+    d="M 50,110 
+       A 30,30 0 0,1 80,80
+       A 40,40 0 0,1 150,95
+       A 25,25 0 0,1 160,140
+       L 55,140
+       A 25,25 0 0,1 50,110 Z" 
+    fill="url(#cloudGrad)" 
+    filter="url(#glow)"
+  />
+
+  <!-- Terminal Symbol ">_" -->
+  <g fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ">" symbol -->
+    <path d="M 80,105 L 95,115 L 80,125" />
+    <!-- "_" symbol -->
+    <line x1="105" y1="125" x2="125" y2="125" />
+  </g>
+</svg>

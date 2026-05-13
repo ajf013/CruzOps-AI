@@ -19,14 +19,14 @@ CruzOps AI leverages a modern React frontend with direct, secure integrations to
 
 ```mermaid
 graph TD
-    User([👨‍💻 User]) --> |Visits App| UI[🖥️ React + Vite UI]
-    UI --> |Validates Identity| Clerk[🔐 Clerk Auth]
+    User(["👨‍💻 User"]) --> |Visits App| UI["🖥️ React + Vite UI"]
+    UI --> |Validates Identity| Clerk["🔐 Clerk Auth"]
     Clerk --> |Returns Secure Session| UI
     
-    UI --> |Prompts for Script| OpenAI[🧠 Azure OpenAI (gpt-4o)]
+    UI --> |Prompts for Script| OpenAI["🧠 Azure OpenAI (gpt-4o)"]
     OpenAI -.-> |Streams Response| UI
     
-    UI --> |Background Sync| TableStorage[(☁️ Azure Table Storage)]
+    UI --> |Background Sync| TableStorage[("☁️ Azure Table Storage")]
     
     subgraph "Local Environment"
         UI

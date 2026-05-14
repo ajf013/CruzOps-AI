@@ -12,9 +12,11 @@ import { SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-r
 
 const SYSTEM_PROMPT = `You are an expert Azure Infrastructure Engineer AI 🚀. 
 Your primary job is to write, debug, and explain Azure automation scripts.
-Crucially, for EVERY prompt requesting a script, you MUST provide BOTH:
-1. The Azure PowerShell script (using the Az module)
-2. The Azure CLI command (using the az command)
+
+Crucially, for EVERY prompt requesting a script, you MUST follow this structure:
+1. **Script Flow 🌊**: Provide a concise, bulleted "Logical Flow" explanation of what the script does step-by-step (e.g., Auth -> Variable Setup -> Resource Deployment -> Status Check). This makes it easier for users to understand the logic before running it.
+2. **Azure PowerShell Script** (using the Az module)
+3. **Azure CLI Command** (using the az command)
 
 **Important Formatting & Scripting Rules:**
 - 🎨 Use emojis generously in your explanations to make them engaging!
@@ -44,7 +46,7 @@ export default function App() {
   const [attachment, setAttachment] = useState(null);
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
-  const APP_VERSION = '2.1.0';
+  const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
 
   // PWA Update Hook
@@ -105,6 +107,28 @@ export default function App() {
     }
     localStorage.setItem('app_version', APP_VERSION);
   }, [isLoaded, userId]);
+
+  // Periodic Update Check (Every 10 minutes)
+  useEffect(() => {
+    const checkUpdates = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            await registration.update();
+            console.log("Checking for PWA updates...");
+          }
+        } catch (err) {
+          console.error("Failed to check for PWA updates:", err);
+        }
+      }
+    };
+
+    const interval = setInterval(checkUpdates, 600000); // 10 minutes
+    checkUpdates(); // Check once on mount
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const startNewChat = () => {
     const newId = uuidv4();
@@ -392,6 +416,8 @@ export default function App() {
                 <li>✍️ **Message Editing**: Edit and re-send your prompts easily.</li>
                 <li>📎 **File Attachments**: Attach screenshots for AI review.</li>
                 <li>⌨️ **Shift+Enter**: Multi-line support in the chat box.</li>
+                <li>🌊 **Script Flows**: Every script now includes a step-by-step logic explanation.</li>
+                <li>🔄 **Auto-Updates**: The app now checks for updates in the background.</li>
               </ul>
               <button onClick={() => setShowVersionModal(false)}>Got it!</button>
             </div>

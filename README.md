@@ -14,6 +14,8 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 - **Multimodal Support**: Attach images, screenshots, or code files for the AI to review, debug, and suggest corrections.
 - **Update Notifications**: Stay informed with an in-app banner for new versions and a "What's New" modal showcasing latest features.
 - **High-Fidelity Typewriter Effect**: AI responses are streamed and typed out letter-by-letter with perfectly synchronized mobile haptics for a truly immersive experience.
+- **Script Flow Analysis**: Every generated script includes a "Logical Flow 🌊" breakdown, explaining exactly what happens at each step of the automation.
+- **Background Auto-Updates**: The application automatically checks for new versions every 10 minutes, ensuring even PWA users on iOS stay up-to-date without manual refreshes.
 - **Mobile Haptics**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices that mimic the feel of a mechanical typewriter.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
 

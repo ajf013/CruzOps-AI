@@ -233,16 +233,24 @@ export default function App() {
       let isFirstChunk = true;
       
       for await (const chunk of stream) {
-        if (chunk.choices[0]?.delta?.content) {
+        const chunkText = chunk.choices[0]?.delta?.content;
+        if (chunkText) {
           if (isFirstChunk) {
             isFirstChunk = false;
           }
-          assistantContent += chunk.choices[0].delta.content;
-          updateChatMessages(currentChatId, [...newMessages, { role: 'assistant', content: assistantContent }], null, false);
-          
-          // Haptic feedback for mobile phones (simulates mechanical typing vibration)
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            try { navigator.vibrate(2); } catch (e) {}
+
+          // Typewriter effect: iterate through characters of the chunk
+          for (let i = 0; i < chunkText.length; i++) {
+            assistantContent += chunkText[i];
+            updateChatMessages(currentChatId, [...newMessages, { role: 'assistant', content: assistantContent }], null, false);
+            
+            // Haptic feedback per character (mechanical feel)
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try { navigator.vibrate(2); } catch (e) {}
+            }
+
+            // Small delay for typing feel
+            await new Promise(resolve => setTimeout(resolve, 15));
           }
         }
       }
@@ -420,7 +428,7 @@ export default function App() {
         <div className="chat-container">
           {currentChat.messages.map((msg, index) => (
             <div key={index} className={`message-wrapper ${msg.role}`}>
-              <div className={`message ${msg.role}`}>
+              <div className={`message ${msg.role} ${isLoading && index === currentChat.messages.length - 1 && msg.role === 'assistant' ? 'typing' : ''}`}>
                 {msg.role === 'assistant' ? (
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}

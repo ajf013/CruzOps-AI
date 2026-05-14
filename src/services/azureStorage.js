@@ -90,3 +90,26 @@ export const loadChatsFromAzure = async (userId) => {
     return localChatsArray;
   }
 };
+
+export const deleteChatFromAzure = async (chatId, userId) => {
+  if (!userId) return;
+
+  // 1. Delete from LocalStorage
+  try {
+    const localChats = JSON.parse(localStorage.getItem(`local_chats_${userId}`) || '{}');
+    delete localChats[chatId];
+    localStorage.setItem(`local_chats_${userId}`, JSON.stringify(localChats));
+  } catch (e) {
+    console.error("LocalStorage delete error", e);
+  }
+
+  // 2. Delete from Azure
+  const client = getTableClient();
+  if (!client) return;
+
+  try {
+    await client.deleteEntity(userId, chatId);
+  } catch (error) {
+    console.error("Error deleting chat from Azure:", error);
+  }
+};

@@ -147,6 +147,65 @@ body::before {
   justify-content: space-between;
 }
 
+.sidebar-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.sidebar-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.25rem;
+}
+
+.delete-chat-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 0.4rem;
+  opacity: 0;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-item:hover .delete-chat-btn {
+  opacity: 1;
+}
+
+.delete-chat-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.privacy-disclaimer {
+  max-width: 850px;
+  margin: 0 auto 0.75rem auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.privacy-disclaimer span {
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
 .new-chat-btn {
   display: flex;
   align-items: center;

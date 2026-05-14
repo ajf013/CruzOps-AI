@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell } from 'lucide-react';
+import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell, Trash2, Lock, ShieldCheck } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { AzureOpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
-import { saveChatToAzure, loadChatsFromAzure } from './services/azureStorage';
+import { saveChatToAzure, loadChatsFromAzure, deleteChatFromAzure } from './services/azureStorage';
 import { SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react';
 
 const SYSTEM_PROMPT = `You are an expert Azure Infrastructure Engineer AI 🚀. 
@@ -26,7 +26,8 @@ Crucially, for EVERY prompt requesting a script, you MUST follow this structure:
 - Always format scripts in clearly labeled markdown code blocks (e.g., \`\`\`powershell and \`\`\`bash).
 
 If the user says a script is wrong or provides an error, analyze the context of your previous script and provide corrected versions of both.
-Be concise but explain the key differences or commands used in both tools.`;
+Be concise but explain the key differences or commands used in both tools.
+🔐 **Security Note:** Remind users to provide valid requirements but never to share sensitive credentials or secrets. Build trust by emphasizing reliability and best practices.`;
 
 const TITLE_PROMPT = `You are a helpful assistant. Summarize the user's prompt into a concise 3-4 word title. Respond ONLY with the title. Do not include quotes or punctuation.`;
 
@@ -222,6 +223,22 @@ export default function App() {
     navigator.clipboard.writeText(text);
     setCopySuccess(id);
     setTimeout(() => setCopySuccess(null), 1500);
+  };
+
+  const handleDeleteChat = async (e, chatId) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this chat? This will remove it from Azure Storage to save costs.")) {
+      await deleteChatFromAzure(chatId, userId);
+      const updatedChats = chats.filter(c => c.id !== chatId);
+      setChats(updatedChats);
+      if (currentChatId === chatId) {
+        if (updatedChats.length > 0) {
+          setCurrentChatId(updatedChats[0].id);
+        } else {
+          startNewChat();
+        }
+      }
+    }
   };
 
   const handleSend = async (e) => {
@@ -455,8 +472,13 @@ export default function App() {
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <Bot size={24} color="#3b82f6" />
-          <h2>History</h2>
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+            <Bot size={24} color="#3b82f6" />
+            <h2>History</h2>
+          </div>
+          <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
         <button className="new-chat-btn" onClick={startNewChat}>
           <Plus size={18} /> New Chat
@@ -478,8 +500,13 @@ export default function App() {
                   setSidebarOpen(false);
                 }}
               >
-                <MessageSquare size={16} />
-                <span>{chat.title}</span>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0}}>
+                  <MessageSquare size={16} />
+                  <span>{chat.title}</span>
+                </div>
+                <button className="delete-chat-btn" onClick={(e) => handleDeleteChat(e, chat.id)}>
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))
           )}
@@ -547,6 +574,10 @@ export default function App() {
         </div>
 
         <div className="input-area">
+          <div className="privacy-disclaimer">
+            <ShieldCheck size={14} color="rgba(255,255,255,0.4)" />
+            <span>Privacy Note: Please do not share sensitive credentials. Trust the bot with valid information.</span>
+          </div>
           {attachment && (
             <div className="attachment-preview">
               <div className="preview-content">

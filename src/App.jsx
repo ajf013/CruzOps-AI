@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X } from 'lucide-react';
+import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -17,6 +17,7 @@ Crucially, for EVERY prompt requesting a script, you MUST provide BOTH:
 
 **Important Formatting & Scripting Rules:**
 - 🎨 Use emojis generously in your explanations to make them engaging!
+- 🔐 **PowerShell Rule:** You MUST include \`Connect-AzAccount\` at the very beginning of every PowerShell script provided.
 - ⏳ For PowerShell scripts that involve loops, multiple resources, or long-running tasks, you MUST include \`Write-Progress\` to show a live progress bar to the user while the script is running.
 - ⏳ For Azure CLI scripts with loops, include simple terminal progress indicators or \`echo\` status updates.
 - Always format scripts in clearly labeled markdown code blocks (e.g., \`\`\`powershell and \`\`\`bash).
@@ -38,6 +39,12 @@ export default function App() {
   const [endpoint, setEndpoint] = useState(import.meta.env.VITE_AZURE_OPENAI_ENDPOINT || '');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_AZURE_OPENAI_API_KEY || '');
   const [deployment, setDeployment] = useState(import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT_NAME || '');
+  const [abortController, setAbortController] = useState(null);
+  const [attachment, setAttachment] = useState(null);
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const APP_VERSION = '2.1.0';
+  const fileInputRef = useRef(null);
   
   const messagesEndRef = useRef(null);
 
@@ -68,6 +75,20 @@ export default function App() {
 
     if (!endpoint || !apiKey || !deployment) {
       console.warn("Azure OpenAI credentials are not fully configured in the server environment.");
+    }
+
+    // Version Check
+    const storedVersion = localStorage.getItem('app_version');
+    if (storedVersion && storedVersion !== APP_VERSION) {
+      setShowVersionModal(true);
+    }
+    localStorage.setItem('app_version', APP_VERSION);
+
+    // PWA Update Detection (Mocked for now, usually hooked to service worker)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.addEventListener('updatefound', () => setShowUpdateBanner(true));
+      });
     }
   }, [isLoaded, userId]);
 
@@ -115,6 +136,37 @@ export default function App() {
       return "Azure Task";
     }
   };
+  
+  const handleStop = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = (msgContent, index) => {
+    // Set input to message content
+    setInput(msgContent);
+    // Remove this message and all subsequent messages from the chat
+    const updatedMessages = currentChat.messages.slice(0, index);
+    updateChatMessages(currentChatId, updatedMessages, null, true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachment({
+          name: file.name,
+          type: file.type,
+          data: reader.result
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -127,12 +179,20 @@ export default function App() {
       return;
     }
 
-    const userMsg = { role: 'user', content: input };
+    const userMsg = { 
+      role: 'user', 
+      content: input,
+      attachment: attachment // Keep internal record of attachment
+    };
     const newMessages = [...currentChat.messages, userMsg];
     
     setInput('');
+    setAttachment(null);
     setIsLoading(true);
     
+    const controller = new AbortController();
+    setAbortController(controller);
+
     // Optimistically update UI without saving to cloud yet
     updateChatMessages(currentChatId, newMessages, null, false);
 
@@ -142,12 +202,24 @@ export default function App() {
         apiKey: apiKey.trim(),
         apiVersion: '2024-02-15-preview',
         deployment: deployment.trim(),
-        dangerouslyAllowBrowser: true
+        dangerouslyAllowBrowser: true,
+        abortSignal: controller.signal
       });
 
       const apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...newMessages.map(m => ({ role: m.role, content: m.content }))
+        ...newMessages.map(m => {
+          if (m.attachment && m.attachment.type.startsWith('image/')) {
+            return {
+              role: m.role,
+              content: [
+                { type: 'text', text: m.content },
+                { type: 'image_url', image_url: { url: m.attachment.data } }
+              ]
+            };
+          }
+          return { role: m.role, content: m.content };
+        })
       ];
 
       const stream = await client.chat.completions.create({
@@ -279,6 +351,31 @@ export default function App() {
       </SignedOut>
       
       <SignedIn>
+        {showUpdateBanner && (
+          <div className="update-banner">
+            <Bell size={16} />
+            <span>A new version of CruzOps AI is available!</span>
+            <button onClick={() => window.location.reload()}>Update Now</button>
+            <button className="close-banner" onClick={() => setShowUpdateBanner(false)}><X size={14}/></button>
+          </div>
+        )}
+
+        {showVersionModal && (
+          <div className="modal-overlay">
+            <div className="modal version-modal">
+              <h2>🎉 What's New in v{APP_VERSION}</h2>
+              <ul className="feature-list">
+                <li>🔐 **Auto-Auth**: `Connect-AzAccount` now included in every script.</li>
+                <li>🛑 **Stop Bot**: Cancel AI generation mid-stream.</li>
+                <li>✍️ **Message Editing**: Edit and re-send your prompts easily.</li>
+                <li>📎 **File Attachments**: Attach screenshots for AI review.</li>
+                <li>⌨️ **Shift+Enter**: Multi-line support in the chat box.</li>
+              </ul>
+              <button onClick={() => setShowVersionModal(false)}>Got it!</button>
+            </div>
+          </div>
+        )}
+
         <div className="app-layout fade-in">
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -332,7 +429,16 @@ export default function App() {
                     {msg.content}
                   </ReactMarkdown>
                 ) : (
-                  msg.content
+                  <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem'}}>
+                    <span style={{flex: 1}}>{msg.content}</span>
+                    <button 
+                      className="edit-btn" 
+                      onClick={() => handleEdit(msg.content, index)}
+                      title="Edit message"
+                    >
+                      <Edit size={12} />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -340,11 +446,16 @@ export default function App() {
           
           {isLoading && currentChat.messages[currentChat.messages.length - 1]?.role !== 'assistant' && (
             <div className="message-wrapper assistant">
-              <div className="message assistant loading-indicator">
-                <Bot size={16} /> Generating response
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
+              <div className="message assistant loading-indicator" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                  <Bot size={16} /> Generating response
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                </div>
+                <button className="stop-btn" onClick={handleStop} title="Stop generation">
+                  <X size={14} /> Stop
+                </button>
               </div>
             </div>
           )}
@@ -352,15 +463,61 @@ export default function App() {
         </div>
 
         <div className="input-area">
+          {attachment && (
+            <div className="attachment-preview">
+              <div className="preview-content">
+                {attachment.type.startsWith('image/') ? (
+                  <img src={attachment.data} alt="preview" />
+                ) : (
+                  <Bot size={24} />
+                )}
+                <span>{attachment.name}</span>
+                <button onClick={() => setAttachment(null)}><X size={14}/></button>
+              </div>
+            </div>
+          )}
           <form className="input-container" onSubmit={handleSend}>
-            <input
-              type="text"
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{display: 'none'}} 
+              onChange={handleFileChange}
+              accept="image/*, .txt, .js, .ps1, .py"
+            />
+            <button 
+              type="button" 
+              className="attach-btn" 
+              onClick={() => fileInputRef.current.click()}
+              disabled={isLoading}
+            >
+              <Paperclip size={20} />
+            </button>
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask for an Azure script (e.g., Create a VM)..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend(e);
+                }
+              }}
+              placeholder="Ask for an Azure script or attach a screenshot for review..."
               disabled={isLoading}
+              rows="1"
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                padding: '0.75rem 1rem',
+                color: 'white',
+                fontSize: '1rem',
+                outline: 'none',
+                resize: 'none',
+                minHeight: '24px',
+                maxHeight: '200px'
+              }}
             />
-            <button type="submit" className="send-btn" disabled={!input.trim() || isLoading}>
+            <button type="submit" className="send-btn" disabled={(!input.trim() && !attachment) || isLoading}>
               <Send size={20} />
             </button>
           </form>

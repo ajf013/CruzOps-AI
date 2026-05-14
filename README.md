@@ -7,10 +7,14 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 ## ✨ Core Features
 
 - **Multi-Provider Authentication**: Fully secured with **Clerk**, allowing seamless login via Google, Microsoft, Apple, or GitHub.
-- **Cross-Device Syncing**: Chat history is persistently stored in **Azure Table Storage** using your unique authenticated ID, meaning you can start a chat on your laptop and finish it on your phone.
+- **Cross-Device Syncing**: Chat history is persistently stored in **Azure Table Storage**. Start a session on one device and resume it on any other after logging in.
+- **Auto-Authentication**: Every generated PowerShell script automatically includes `Connect-AzAccount` for immediate usability.
+- **Bot Control**: Take control of the AI with a "Stop" button to cancel generation mid-stream.
+- **Message Editing**: Correct or refine your prompts easily with the in-chat edit feature.
+- **Multimodal Support**: Attach images, screenshots, or code files for the AI to review, debug, and suggest corrections.
+- **Update Notifications**: Stay informed with an in-app banner for new versions and a "What's New" modal showcasing latest features.
 - **Real-Time Streaming**: AI responses are streamed directly to the UI character-by-character for a fast, premium feel.
-- **Mobile Haptics**: Features subtle device vibrations (`navigator.vibrate`) that simulate mechanical typing on supported mobile devices during text generation.
-- **Auto-Titling**: Automatically generates a concise 3-word summary of your prompt to title your chat sessions in the sidebar.
+- **Mobile Haptics**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices during text generation.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
 
 ## 🏗️ Architecture & Data Flow

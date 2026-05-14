@@ -71,11 +71,24 @@ export default function App() {
     if (!isLoaded || !userId) return;
 
     const loadData = async () => {
+      // 1. Instant local recovery
+      const localHistory = JSON.parse(localStorage.getItem(`local_chats_${userId}`) || '{}');
+      const localArray = Object.values(localHistory).sort((a, b) => new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0));
+      
+      if (localArray.length > 0) {
+        setChats(localArray);
+        setCurrentChatId(localArray[0].id);
+      }
+
+      // 2. Background sync from Azure
       const history = await loadChatsFromAzure(userId);
       if (history.length > 0) {
         setChats(history);
-        setCurrentChatId(history[0].id);
-      } else {
+        // Only set current ID if we didn't have a local one or if the local one is 'New Chat'
+        if (localArray.length === 0 || localArray[0].title === 'New Chat') {
+          setCurrentChatId(history[0].id);
+        }
+      } else if (localArray.length === 0) {
         startNewChat();
       }
     };

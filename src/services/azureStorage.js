@@ -18,20 +18,28 @@ const getTableClient = () => {
 export const saveChatToAzure = async (chatId, title, messages, userId) => {
   if (!userId) return; // Do not save if unauthenticated
   
-  const client = getTableClient();
-  if (!client) {
+  const lastUpdated = new Date().toISOString();
+  const chatData = { id: chatId, title, messages, lastUpdated };
+
+  // Always save to localStorage first for instant local recovery
+  try {
     const localChats = JSON.parse(localStorage.getItem(`local_chats_${userId}`) || '{}');
-    localChats[chatId] = { id: chatId, title, messages };
+    localChats[chatId] = chatData;
     localStorage.setItem(`local_chats_${userId}`, JSON.stringify(localChats));
-    return;
+  } catch (e) {
+    console.error("LocalStorage error", e);
   }
+
+  const client = getTableClient();
+  if (!client) return;
 
   try {
     await client.upsertEntity({
       partitionKey: userId,
       rowKey: chatId,
       title: title,
-      messages: JSON.stringify(messages)
+      messages: JSON.stringify(messages),
+      lastUpdated: lastUpdated
     }, "Replace");
   } catch (error) {
     console.error("Error saving chat to Azure:", error);
@@ -41,11 +49,20 @@ export const saveChatToAzure = async (chatId, title, messages, userId) => {
 export const loadChatsFromAzure = async (userId) => {
   if (!userId) return []; // Return empty if unauthenticated
 
-  const client = getTableClient();
-  if (!client) {
+  // 1. Instant recovery from LocalStorage
+  let localChatsArray = [];
+  try {
     const localChats = JSON.parse(localStorage.getItem(`local_chats_${userId}`) || '{}');
-    return Object.values(localChats).sort((a, b) => b.id.localeCompare(a.id));
+    localChatsArray = Object.values(localChats).sort((a, b) => 
+      new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0)
+    );
+  } catch (e) {
+    console.error("LocalStorage load error", e);
   }
+
+  // 2. Fetch from Azure in background
+  const client = getTableClient();
+  if (!client) return localChatsArray;
 
   try {
     const chats = [];
@@ -57,12 +74,19 @@ export const loadChatsFromAzure = async (userId) => {
       chats.push({
         id: entity.rowKey,
         title: entity.title,
-        messages: JSON.parse(entity.messages || '[]')
+        messages: JSON.parse(entity.messages || '[]'),
+        lastUpdated: entity.lastUpdated || new Date(0).toISOString()
       });
     }
-    return chats.sort((a, b) => b.id.localeCompare(a.id));
+    
+    const sortedAzureChats = chats.sort((a, b) => 
+      new Date(b.lastUpdated) - new Date(a.lastUpdated)
+    );
+
+    // Merge or return Azure chats as the truth
+    return sortedAzureChats.length > 0 ? sortedAzureChats : localChatsArray;
   } catch (error) {
     console.error("Error loading chats from Azure:", error);
-    return [];
+    return localChatsArray;
   }
 };

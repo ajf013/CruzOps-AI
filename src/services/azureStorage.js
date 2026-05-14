@@ -36,6 +36,11 @@ export const saveChatToAzure = async (chatId, title, messages, userId) => {
   if (!client) return;
 
   try {
+    // Ensure table exists before saving
+    await client.createTable({ onResponse: (res) => {
+      if (res.status === 409) console.log("Table already exists.");
+    }});
+
     await client.upsertEntity({
       partitionKey: userId,
       rowKey: chatId,

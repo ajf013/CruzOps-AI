@@ -46,6 +46,7 @@ export default function App() {
   const [attachment, setAttachment] = useState(null);
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
 
@@ -129,6 +130,16 @@ export default function App() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Splash Screen Timer
+  useEffect(() => {
+    if (isLoaded) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2500); // 2.5 seconds premium intro
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded]);
 
   const startNewChat = () => {
     const newId = uuidv4();
@@ -348,10 +359,16 @@ export default function App() {
     return <code className={className} {...props}>{children}</code>;
   };
 
-  if (!isLoaded) return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'}}>Loading Authentication...</div>;
-
   return (
-    <>
+    <div className="app-container">
+      <div className={`splash-screen ${(!showSplash && isLoaded) ? 'fade-out' : ''}`}>
+        <img src="/logo.svg" alt="CruzOps AI" className="splash-logo" />
+        <div className="splash-content">
+          <h1>CruzOps AI</h1>
+          <p>Enterprise-grade Azure Infrastructure Assistant</p>
+        </div>
+      </div>
+
       <SignedOut>
         <div style={{
           height: '100vh', 
@@ -573,6 +590,6 @@ export default function App() {
         </div>
       </div>
       </SignedIn>
-    </>
+    </div>
   );
 }

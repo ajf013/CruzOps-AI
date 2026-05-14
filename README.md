@@ -19,6 +19,18 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 - **Mobile Haptics**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices that mimic the feel of a mechanical typewriter.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
 
+## 🛠️ Tech Stack
+
+| Technology | Icon | Version | Description |
+| :--- | :---: | :--- | :--- |
+| **React** | ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) | `v19.2.6` | Core frontend library for building the UI. |
+| **Vite** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white) | `v8.0.12` | Next-generation frontend tooling and bundler. |
+| **Clerk** | ![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white) | `v5.61.6` | Enterprise-grade identity and session management. |
+| **Azure Storage** | ![Azure](https://img.shields.io/badge/Azure_Tables-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white) | `v13.3.2` | Persistent, scalable chat history storage. |
+| **OpenAI (Azure)** | ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white) | `v6.37.0` | GPT-4o powered script generation and vision analysis. |
+| **Lucide Icons** | ![Lucide](https://img.shields.io/badge/Lucide_React-F59E0B?style=for-the-badge&logo=lucide&logoColor=white) | `v1.14.0` | Premium, consistent iconography throughout the app. |
+| **PWA** | ![PWA](https://img.shields.io/badge/Vite_PWA-3EAF7C?style=for-the-badge&logo=pwa&logoColor=white) | `v1.3.0` | Enables offline support and mobile installability. |
+
 ## 🏗️ Architecture & Data Flow
 
 CruzOps AI leverages a modern React frontend with direct, secure integrations to Azure cloud services. 
@@ -120,12 +132,3 @@ cruzops-ai/
    ```bash
    npm run dev
    ```
-
-## 🛠️ Tech Stack
-- **Frontend Framework**: React 19, Vite
-- **Styling**: Vanilla CSS (Glassmorphism, CSS Variables)
-- **Authentication**: Clerk (`@clerk/clerk-react`)
-- **Database**: Azure Table Storage (`@azure/data-tables`)
-- **AI Integration**: Azure OpenAI SDK (`openai`)
-- **Markdown & Syntax**: `react-markdown`, `react-syntax-highlighter`
-- **Icons**: Lucide React

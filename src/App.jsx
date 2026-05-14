@@ -47,6 +47,7 @@ export default function App() {
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [copySuccess, setCopySuccess] = useState(null);
   const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
 
@@ -217,6 +218,12 @@ export default function App() {
     }
   };
 
+  const handleCopy = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopySuccess(id);
+    setTimeout(() => setCopySuccess(null), 1500);
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -333,20 +340,23 @@ export default function App() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     };
+    const language = match ? match[1] : 'text';
 
     if (!inline && match) {
       return (
         <div className="code-wrapper">
           <div className="code-header">
-            <span>{match[1]}</span>
-            <button className="copy-btn" onClick={handleCopy} title="Copy code">
-              {copied ? <Check size={14} color="#4ade80" /> : <Copy size={14} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+            <span>{language}</span>
+            <div style={{position: 'relative'}}>
+              {copySuccess === children && <span className="copy-feedback">Copied!</span>}
+              <button className="copy-btn" onClick={() => handleCopy(String(children).replace(/\n$/, ''), children)}>
+                <Copy size={16} />
+              </button>
+            </div>
           </div>
           <SyntaxHighlighter
             style={vscDarkPlus}
-            language={match[1]}
+            language={language}
             PreTag="div"
             customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
             {...props}
@@ -445,25 +455,34 @@ export default function App() {
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <button className="new-chat-btn" onClick={startNewChat}>
-            <Plus size={18} /> New Chat
-          </button>
-          <button className="menu-toggle" style={{marginLeft: '0.5rem'}} onClick={() => setSidebarOpen(false)}>
-            <X size={20} />
-          </button>
+          <Bot size={24} color="#3b82f6" />
+          <h2>History</h2>
         </div>
-        <div className="chat-history">
-          {chats.map(chat => (
-            <button 
-              key={chat.id} 
-              className={`history-item ${chat.id === currentChatId ? 'active' : ''}`}
-              onClick={() => { setCurrentChatId(chat.id); setSidebarOpen(false); }}
-              title={chat.title}
-            >
-              <MessageSquare size={14} style={{display:'inline', marginRight:'8px', verticalAlign:'text-bottom'}}/>
-              {chat.title}
-            </button>
-          ))}
+        <button className="new-chat-btn" onClick={startNewChat}>
+          <Plus size={18} /> New Chat
+        </button>
+        <div className="chat-list">
+          {!isLoaded || (chats.length === 0 && !currentChatId) ? (
+            <>
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+            </>
+          ) : (
+            chats.map(chat => (
+              <div 
+                key={chat.id} 
+                className={`chat-item ${currentChatId === chat.id ? 'active' : ''}`}
+                onClick={() => {
+                  setCurrentChatId(chat.id);
+                  setSidebarOpen(false);
+                }}
+              >
+                <MessageSquare size={16} />
+                <span>{chat.title}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

@@ -504,8 +504,8 @@ export default function App() {
                   <MessageSquare size={16} />
                   <span>{chat.title}</span>
                 </div>
-                <button className="delete-chat-btn" onClick={(e) => handleDeleteChat(e, chat.id)}>
-                  <Trash2 size={14} />
+                <button className="delete-chat-btn" onClick={(e) => handleDeleteChat(e, chat.id)} title="Delete chat">
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))

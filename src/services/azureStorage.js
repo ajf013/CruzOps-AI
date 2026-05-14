@@ -8,7 +8,9 @@ const getTableClient = () => {
     return null;
   }
   try {
-    return new TableClient(sasUrl);
+    // If the SAS URL is a service-level URL, we must provide the table name explicitly.
+    // "Chats" is our standard table name for this application.
+    return new TableClient(sasUrl, "Chats");
   } catch (e) {
     console.error("Invalid SAS URL", e);
     return null;
@@ -66,6 +68,7 @@ export const loadChatsFromAzure = async (userId) => {
 
   try {
     const chats = [];
+    // Ensure the client is actually operational
     const entities = client.listEntities({
       queryOptions: { filter: `PartitionKey eq '${userId}'` }
     });
@@ -86,7 +89,7 @@ export const loadChatsFromAzure = async (userId) => {
     // Merge or return Azure chats as the truth
     return sortedAzureChats.length > 0 ? sortedAzureChats : localChatsArray;
   } catch (error) {
-    console.error("Error loading chats from Azure:", error);
+    console.error("Azure Fetch Error (falling back to LocalStorage):", error);
     return localChatsArray;
   }
 };

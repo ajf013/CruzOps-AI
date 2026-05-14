@@ -171,14 +171,16 @@ body::before {
   cursor: pointer;
   padding: 0.4rem;
   border-radius: 0.4rem;
-  opacity: 0;
+  opacity: 0.4; /* Partially visible by default for discoverability */
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.chat-item:hover .delete-chat-btn {
+.chat-item:hover .delete-chat-btn,
+.chat-item.active .delete-chat-btn {
   opacity: 1;
 }
 

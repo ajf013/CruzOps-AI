@@ -235,13 +235,51 @@ export default function App() {
   return (
     <>
       <SignedOut>
-        <div style={{height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)'}}>
-          <SignIn routing="hash" />
+        <div style={{
+          height: '100vh', 
+          width: '100vw', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          background: 'radial-gradient(circle at center, var(--bg-panel), var(--bg-dark))',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Subtle background glow */}
+          <div style={{
+            position: 'absolute',
+            width: '600px',
+            height: '600px',
+            background: 'radial-gradient(circle, hsla(217, 91%, 60%, 0.15) 0%, transparent 70%)',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none'
+          }} />
+          <SignIn 
+            routing="hash" 
+            appearance={{
+              variables: {
+                colorPrimary: '#3b82f6',
+                colorBackground: '#0f172a',
+                colorText: '#f8fafc',
+                colorInputBackground: '#1e293b',
+                colorInputText: '#f8fafc',
+              },
+              elements: {
+                card: {
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(16px)',
+                }
+              }
+            }}
+          />
         </div>
       </SignedOut>
       
       <SignedIn>
-        <div className="app-layout">
+        <div className="app-layout fade-in">
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">

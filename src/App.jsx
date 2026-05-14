@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -45,6 +46,13 @@ export default function App() {
   const [showVersionModal, setShowVersionModal] = useState(false);
   const APP_VERSION = '2.1.0';
   const fileInputRef = useRef(null);
+
+  // PWA Update Hook
+  const {
+    offlineReady: [offlineReady, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
   
   const messagesEndRef = useRef(null);
 
@@ -83,13 +91,6 @@ export default function App() {
       setShowVersionModal(true);
     }
     localStorage.setItem('app_version', APP_VERSION);
-
-    // PWA Update Detection (Mocked for now, usually hooked to service worker)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.addEventListener('updatefound', () => setShowUpdateBanner(true));
-      });
-    }
   }, [isLoaded, userId]);
 
   const startNewChat = () => {
@@ -359,12 +360,12 @@ export default function App() {
       </SignedOut>
       
       <SignedIn>
-        {showUpdateBanner && (
+        {(needRefresh || showUpdateBanner) && (
           <div className="update-banner">
             <Bell size={16} />
             <span>A new version of CruzOps AI is available!</span>
-            <button onClick={() => window.location.reload()}>Update Now</button>
-            <button className="close-banner" onClick={() => setShowUpdateBanner(false)}><X size={14}/></button>
+            <button onClick={() => updateServiceWorker(true)}>Update Now</button>
+            <button className="close-banner" onClick={() => { setNeedRefresh(false); setShowUpdateBanner(false); }}><X size={14}/></button>
           </div>
         )}
 
@@ -384,7 +385,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="app-layout fade-in">
+        <div className={`app-layout fade-in ${(needRefresh || showUpdateBanner) ? 'with-banner' : ''}`}>
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">

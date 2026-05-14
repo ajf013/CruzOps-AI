@@ -46,6 +46,11 @@ body {
   background: var(--bg-dark);
 }
 
+.app-layout.with-banner {
+  margin-top: 48px; /* Height of the banner */
+  height: calc(100vh - 48px);
+}
+
 .sidebar {
   width: 260px;
   background: var(--bg-panel);
@@ -503,6 +508,10 @@ body {
 }
 
 .update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   background: var(--primary);
   color: white;
   padding: 0.75rem 1.5rem;
@@ -512,8 +521,9 @@ body {
   gap: 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  z-index: 100;
+  z-index: 9999;
   animation: slideDown 0.4s ease-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 .update-banner button {

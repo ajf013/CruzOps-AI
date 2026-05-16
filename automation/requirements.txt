@@ -1,0 +1,5 @@
+azure-identity
+azure-keyvault-secrets
+msgraph-sdk
+requests
+python-dotenv

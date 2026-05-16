@@ -15,9 +15,9 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 - **Update Notifications**: Stay informed with an in-app banner for new versions and a "What's New" modal showcasing latest features.
 - **High-Fidelity Typewriter Effect**: AI responses are streamed and typed out letter-by-letter with perfectly synchronized mobile haptics for a truly immersive experience.
 - **Script Flow Analysis**: Every generated script includes a "Logical Flow 🌊" breakdown, explaining exactly what happens at each step of the automation.
-- **Background Auto-Updates**: The application automatically checks for new versions every 10 minutes, ensuring even PWA users on iOS stay up-to-date without manual refreshes.
-- **Mobile Haptics**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices that mimic the feel of a mechanical typewriter.
+- **Mobile Haptic Engine**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices that mimic the feel of a mechanical typewriter.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
+- **Automated Secret Rotation**: Integrated Azure Automation system that monitors App Registration secrets and notifies owners at 30/15/7/1-day intervals to prevent service outages.
 
 ## 🛠️ Tech Stack
 
@@ -45,6 +45,12 @@ graph TD
     OpenAI -.-> |Streams Response| UI
     
     UI --> |Background Sync| TableStorage[("☁️ Azure Table Storage")]
+
+    subgraph "Governance & Automation"
+        AA["🤖 Azure Automation Account"]
+        AA --> |Scans Expiry| Entra["🆔 Entra ID App Registrations"]
+        AA --> |Sends Notifications| Emails["📧 Email Notifications"]
+    end
     
     subgraph "Local Environment"
         UI
@@ -105,8 +111,11 @@ cruzops-ai/
     ├── main.jsx               # React Root & ClerkProvider Wrapper
     ├── App.jsx                # Core Chat UI, Sidebar & Streaming Logic
     ├── index.css              # Glassmorphism Dark Mode Styling
-    └── services/
-        └── azureStorage.js    # Azure Table Storage Sync Logic
+    ├── services/
+    │   └── azureStorage.js    # Azure Table Storage Sync Logic
+    └── automation/            # Cloud Governance Scripts
+        ├── Check-AppExpiry.ps1 # PowerShell Runbook for Secret Monitoring
+        └── README.md          # Automation Setup Guide
 ```
 
 ## 🚀 Getting Started

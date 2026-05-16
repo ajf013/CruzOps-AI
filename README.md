@@ -63,6 +63,13 @@ graph TD
     end
 ```
 
+### 🔄 Automated Secret Monitoring
+To maintain 100% uptime, the project includes an **Azure Automation** layer that monitors the health of App Registration secrets.
+- **Workflow**: A PowerShell runbook (`Check-AppExpiry`) runs daily.
+- **Identity**: Authenticates securely via a **System-Assigned Managed Identity**.
+- **Notification Thresholds**: Emails are automatically sent to `Anto13franc@outlook.com` and `sasafiyullah@outlook.com` at **30, 15, 7, and 1-day** intervals before any secret expires.
+- **Scope**: Scans all App Registrations within the tenant to ensure global governance.
+
 ### Authentication Flow
 1. User visits `CruzOps AI`.
 2. App checks for active Clerk session. If none, user is blocked by `<SignIn />` wall.

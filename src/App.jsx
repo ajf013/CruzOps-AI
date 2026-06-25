@@ -342,28 +342,12 @@ export default function App() {
       });
 
       let assistantContent = '';
-      let isFirstChunk = true;
       
       for await (const chunk of stream) {
         const chunkText = chunk.choices[0]?.delta?.content;
         if (chunkText) {
-          if (isFirstChunk) {
-            isFirstChunk = false;
-          }
-
-          // Typewriter effect: iterate through characters of the chunk
-          for (let i = 0; i < chunkText.length; i++) {
-            assistantContent += chunkText[i];
-            updateChatMessages(currentChatId, [...newMessages, { role: 'assistant', content: assistantContent }], null, false);
-            
-            // Haptic feedback per character (mechanical feel)
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
-              try { navigator.vibrate(2); } catch (e) {}
-            }
-
-            // Small delay for typing feel
-            await new Promise(resolve => setTimeout(resolve, 15));
-          }
+          assistantContent += chunkText;
+          updateChatMessages(currentChatId, [...newMessages, { role: 'assistant', content: assistantContent }], null, false);
         }
       }
 

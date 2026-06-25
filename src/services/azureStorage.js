@@ -17,6 +17,8 @@ const getTableClient = () => {
   }
 };
 
+let isTableCreated = false;
+
 export const saveChatToAzure = async (chatId, title, messages, userId) => {
   if (!userId) return; // Do not save if unauthenticated
   
@@ -36,13 +38,18 @@ export const saveChatToAzure = async (chatId, title, messages, userId) => {
   if (!client) return;
 
   try {
-    // Ensure table exists before saving
-    try {
-      await client.createTable();
-    } catch (e) {
-      // 409 (Conflict) is returned if the table already exists. We can safely ignore it.
-      if (e.statusCode !== 409 && e.code !== "TableAlreadyExists") {
-        throw e;
+    // Ensure table exists before saving (only once per session to avoid redundant 409 Conflict network errors)
+    if (!isTableCreated) {
+      try {
+        await client.createTable();
+        isTableCreated = true;
+      } catch (e) {
+        // 409 (Conflict) is returned if the table already exists. We can safely ignore it.
+        if (e.statusCode === 409 || e.code === "TableAlreadyExists") {
+          isTableCreated = true;
+        } else {
+          throw e;
+        }
       }
     }
 

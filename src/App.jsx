@@ -46,6 +46,7 @@ export default function App() {
   const [deployment, setDeployment] = useState(import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT_NAME || '');
   const [abortController, setAbortController] = useState(null);
   const [attachment, setAttachment] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -214,8 +215,7 @@ export default function App() {
     updateChatMessages(currentChatId, updatedMessages, null, true);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const processFile = (file) => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -226,6 +226,40 @@ export default function App() {
         });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    processFile(file);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      processFile(file);
     }
   };
 
@@ -618,7 +652,14 @@ export default function App() {
               </div>
             </div>
           )}
-          <form className="input-container" onSubmit={handleSend}>
+          <form 
+            className={`input-container ${isDragging ? 'dragging' : ''}`} 
+            onSubmit={handleSend}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <input 
               type="file" 
               ref={fileInputRef} 

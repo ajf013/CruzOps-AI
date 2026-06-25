@@ -15,6 +15,7 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 - **Update Notifications**: Stay informed with an in-app banner for new versions and a "What's New" modal showcasing latest features.
 - **Instant Response Streaming**: Responses are rendered instantly in real-time as chunks arrive from the server, avoiding artificial typewriter typing lags.
 - **Smart Scroll Lock**: Viewport scroll-locking prevents auto-scroll from pulling you down to the bottom if you scroll up to inspect previous answers while the bot is generating.
+- **Mobile Keyboard Next-Line Support**: On mobile virtual keyboards, pressing "Enter/Go" always inserts a new line (instead of triggering message submission) to prevent accidental sends. Message submission is done explicitly by clicking the Send button in the UI.
 - **Enforced 3-Format Scripting**: Outputs a logical script flow, an Azure PowerShell script, Azure CLI commands, and an Azure Resource Graph (KQL) query for every request.
 - **Cyberpunk Glassmorphism UI**: High-fidelity dark mode with moving ambient nebula backgrounds, translucent panels with high blur values, neon-glowing accents, and responsive micro-animations.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.

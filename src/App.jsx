@@ -688,7 +688,8 @@ export default function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                const isMobileDevice = window.innerWidth <= 768 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+                if (e.key === 'Enter' && !e.shiftKey && !isMobileDevice) {
                   e.preventDefault();
                   handleSend(e);
                 }

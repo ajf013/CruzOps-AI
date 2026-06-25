@@ -6,16 +6,17 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 
 ## ✨ Core Features
 
-- **Multi-Provider Authentication**: Fully secured with **Clerk**, allowing seamless login via Google, Microsoft, Apple, or GitHub.
+- **Multi-Provider Authentication**: Fully secured with **Clerk** (custom themed dark-mode), allowing seamless login via Google, Microsoft, Apple, or GitHub.
 - **Cross-Device Syncing**: Chat history is persistently stored in **Azure Table Storage**. Start a session on one device and resume it on any other after logging in.
 - **Auto-Authentication**: Every generated PowerShell script automatically includes `Connect-AzAccount` for immediate usability.
 - **Bot Control**: Take control of the AI with a "Stop" button to cancel generation mid-stream.
 - **Message Editing**: Correct or refine your prompts easily with the in-chat edit feature.
-- **Multimodal Support**: Attach images, screenshots, or code files for the AI to review, debug, and suggest corrections.
+- **Multimodal Support & Drag-and-Drop**: Attach files by clicking the attach icon or simply dragging and dropping them directly onto the input box, featuring a dynamic visual glow indicator.
 - **Update Notifications**: Stay informed with an in-app banner for new versions and a "What's New" modal showcasing latest features.
-- **High-Fidelity Typewriter Effect**: AI responses are streamed and typed out letter-by-letter with perfectly synchronized mobile haptics for a truly immersive experience.
-- **Script Flow Analysis**: Every generated script includes a "Logical Flow 🌊" breakdown, explaining exactly what happens at each step of the automation.
-- **Mobile Haptic Engine**: Features subtle device vibrations (`navigator.vibrate`) on supported mobile devices that mimic the feel of a mechanical typewriter.
+- **Instant Response Streaming**: Responses are rendered instantly in real-time as chunks arrive from the server, avoiding artificial typewriter typing lags.
+- **Smart Scroll Lock**: Viewport scroll-locking prevents auto-scroll from pulling you down to the bottom if you scroll up to inspect previous answers while the bot is generating.
+- **Enforced 3-Format Scripting**: Outputs a logical script flow, an Azure PowerShell script, Azure CLI commands, and an Azure Resource Graph (KQL) query for every request.
+- **Cyberpunk Glassmorphism UI**: High-fidelity dark mode with moving ambient nebula backgrounds, translucent panels with high blur values, neon-glowing accents, and responsive micro-animations.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
 - **Automated Secret Rotation**: Integrated Azure Automation system that monitors App Registration secrets and notifies owners at 30/15/7/1-day intervals to prevent service outages.
 
@@ -25,7 +26,7 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 | :--- | :---: | :--- | :--- |
 | **React** | ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) | `v19.2.6` | Core frontend library for building the UI. |
 | **Vite** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white) | `v8.0.12` | Next-generation frontend tooling and bundler. |
-| **Clerk** | ![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white) | `v5.61.6` | Enterprise-grade identity and session management. |
+| **Clerk & Themes**| ![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white) | `v5.61.6` / `v2.4.57` | Identity management with dark theme integrations. |
 | **Azure Storage** | ![Azure](https://img.shields.io/badge/Azure_Tables-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white) | `v13.3.2` | Persistent, scalable chat history storage. |
 | **OpenAI (Azure)** | ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white) | `v6.37.0` | GPT-4o powered script generation and vision analysis. |
 | **Lucide Icons** | ![Lucide](https://img.shields.io/badge/Lucide_React-F59E0B?style=for-the-badge&logo=lucide&logoColor=white) | `v1.14.0` | Premium, consistent iconography throughout the app. |
@@ -89,10 +90,7 @@ sequenceDiagram
     
     loop Every Chunk
         OAI-->>A: Yield Token Chunk
-        A->>A: Append Token to UI State
-        opt Mobile Device
-            A->>U: Trigger 2ms Haptic Vibration
-        end
+        A->>A: Append Chunk to UI State (Instant Render)
     end
     
     OAI-->>A: [DONE]

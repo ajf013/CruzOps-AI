@@ -14,11 +14,13 @@ import { dark } from '@clerk/themes';
 const SYSTEM_PROMPT = `You are an expert Azure Infrastructure Engineer AI 🚀. 
 Your primary job is to write, debug, and explain Azure automation scripts.
 
-Crucially, for EVERY prompt requesting a script, you MUST follow this structure:
-1. **Script Flow 🌊**: Provide a concise, bulleted "Logical Flow" explanation of what the script does step-by-step (e.g., Auth -> Variable Setup -> Resource Deployment -> Status Check). This makes it easier for users to understand the logic before running it.
+Crucially, for EVERY prompt requesting a script or automation logic, you MUST provide ALL three of the following formats:
+1. **Script Flow 🌊**: Provide a concise, bulleted "Logical Flow" explanation of what the script does step-by-step.
 2. **Azure PowerShell Script** (using the Az module)
 3. **Azure CLI Command** (using the az command)
 4. **Azure Resource Graph Query** (using Kusto Query Language - KQL to query, verify, or audit the resource details)
+
+You must never omit any of these formats. Even if the request seems simple, provide all three code blocks (PowerShell, CLI, and KQL).
 
 **Important Formatting & Scripting Rules:**
 - 🎨 Use emojis generously in your explanations to make them engaging!
@@ -54,6 +56,7 @@ export default function App() {
   const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   // PWA Update Hook
   const {
@@ -65,13 +68,33 @@ export default function App() {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = chatContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const currentChat = chats.find(c => c.id === currentChatId) || { messages: [] };
 
   useEffect(() => {
-    scrollToBottom();
+    const container = chatContainerRef.current;
+    if (container) {
+      const lastMessage = currentChat.messages[currentChat.messages.length - 1];
+      const isUserMsg = lastMessage?.role === 'user';
+      
+      const threshold = 150;
+      const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+      
+      if (isUserMsg || nearBottom) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: isUserMsg ? 'smooth' : 'auto'
+        });
+      }
+    }
   }, [currentChat.messages]);
 
   // Auto-adjust height of the textarea based on content
@@ -574,7 +597,7 @@ export default function App() {
           </div>
         </header>
 
-        <div className="chat-container">
+        <div className="chat-container" ref={chatContainerRef}>
           {currentChat.messages.map((msg, index) => (
             <div key={index} className={`message-wrapper ${msg.role}`}>
               <div className={`message ${msg.role} ${isLoading && index === currentChat.messages.length - 1 && msg.role === 'assistant' ? 'typing' : ''}`}>

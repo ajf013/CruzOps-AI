@@ -9,6 +9,7 @@ import { AzureOpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { saveChatToAzure, loadChatsFromAzure, deleteChatFromAzure } from './services/azureStorage';
 import { SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react';
+import { dark } from '@clerk/themes';
 
 const SYSTEM_PROMPT = `You are an expert Azure Infrastructure Engineer AI 🚀. 
 Your primary job is to write, debug, and explain Azure automation scripts.
@@ -51,6 +52,7 @@ export default function App() {
   const [copySuccess, setCopySuccess] = useState(null);
   const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // PWA Update Hook
   const {
@@ -70,6 +72,15 @@ export default function App() {
   useEffect(() => {
     scrollToBottom();
   }, [currentChat.messages]);
+
+  // Auto-adjust height of the textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [input]);
 
   // Initial Load
   useEffect(() => {
@@ -421,18 +432,33 @@ export default function App() {
           <SignIn 
             routing="hash" 
             appearance={{
+              baseTheme: dark,
               variables: {
                 colorPrimary: '#3b82f6',
-                colorBackground: '#0f172a',
+                colorBackground: 'rgba(15, 23, 42, 0.65)',
                 colorText: '#f8fafc',
                 colorInputBackground: '#1e293b',
                 colorInputText: '#f8fafc',
+                colorTextSecondary: '#94a3b8',
               },
               elements: {
                 card: {
                   boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(16px)',
+                  background: 'rgba(15, 23, 42, 0.65)',
+                },
+                socialButtonsIconButton: {
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  }
+                },
+                socialButtonsBlockButton: {
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  }
                 }
               }
             }}
@@ -524,7 +550,15 @@ export default function App() {
             <h1>CruzOps AI</h1>
           </div>
           <div className="header-right" style={{display: 'flex', alignItems: 'center'}}>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton 
+              afterSignOutUrl="/" 
+              appearance={{
+                baseTheme: dark,
+                variables: {
+                  colorPrimary: '#3b82f6',
+                }
+              }}
+            />
           </div>
         </header>
 
@@ -608,6 +642,7 @@ export default function App() {
               <Paperclip size={20} />
             </button>
             <textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -629,7 +664,8 @@ export default function App() {
                 outline: 'none',
                 resize: 'none',
                 minHeight: '24px',
-                maxHeight: '200px'
+                maxHeight: '200px',
+                overflowY: 'auto'
               }}
             />
             <button type="submit" className="send-btn" disabled={(!input.trim() && !attachment) || isLoading}>

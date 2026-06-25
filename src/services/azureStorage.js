@@ -37,9 +37,14 @@ export const saveChatToAzure = async (chatId, title, messages, userId) => {
 
   try {
     // Ensure table exists before saving
-    await client.createTable({ onResponse: (res) => {
-      if (res.status === 409) console.log("Table already exists.");
-    }});
+    try {
+      await client.createTable();
+    } catch (e) {
+      // 409 (Conflict) is returned if the table already exists. We can safely ignore it.
+      if (e.statusCode !== 409 && e.code !== "TableAlreadyExists") {
+        throw e;
+      }
+    }
 
     await client.upsertEntity({
       partitionKey: userId,

@@ -798,6 +798,7 @@ body::before {
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
   animation: popUpFade 1s forwards;
 }
 

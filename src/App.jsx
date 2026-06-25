@@ -49,7 +49,6 @@ export default function App() {
   const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [copySuccess, setCopySuccess] = useState(null);
   const APP_VERSION = '2.3.0';
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -230,12 +229,6 @@ export default function App() {
     }
   };
 
-  const handleCopy = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopySuccess(id);
-    setTimeout(() => setCopySuccess(null), 1500);
-  };
-
   const handleDeleteChat = async (e, chatId) => {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this chat? This will remove it from Azure Storage to save costs.")) {
@@ -376,9 +369,9 @@ export default function App() {
           <div className="code-header">
             <span>{language}</span>
             <div style={{position: 'relative'}}>
-              {copySuccess === children && <span className="copy-feedback">Copied!</span>}
-              <button className="copy-btn" onClick={() => handleCopy(String(children).replace(/\n$/, ''), children)}>
-                <Copy size={16} />
+              {copied && <span className="copy-feedback">Text copied to clipboard</span>}
+              <button className="copy-btn" onClick={handleCopy}>
+                {copied ? <Check size={16} color="#4ade80" /> : <Copy size={16} />}
               </button>
             </div>
           </div>

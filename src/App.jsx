@@ -421,7 +421,7 @@ export default function App() {
             style={vscDarkPlus}
             language={language}
             PreTag="div"
-            customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
+            customStyle={{ margin: 0, padding: '1rem', background: 'transparent', overflowX: 'auto' }}
             {...props}
           >
             {String(children).replace(/\n$/, '')}

@@ -19,6 +19,7 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 - **Enforced 3-Format Scripting**: Outputs a logical script flow, an Azure PowerShell script, Azure CLI commands, and an Azure Resource Graph (KQL) query for every request.
 - **Cyberpunk Glassmorphism UI**: High-fidelity dark mode with moving ambient nebula backgrounds, translucent panels with high blur values, neon-glowing accents, and responsive micro-animations.
 - **Progressive Web App (PWA)**: Fully installable as a standalone application on desktop and mobile devices.
+- **Responsive Layout & Auto-Fit**: Completely optimized for all desktop, tablet, and mobile viewports with automatic horizontal overflow prevention, internal code scrolling, and wrapping of unbroken text (like raw JSON blocks).
 - **Automated Secret Rotation**: Integrated Azure Automation system that monitors App Registration secrets and notifies owners at 30/15/7/1-day intervals to prevent service outages.
 
 ## 🛠️ Tech Stack

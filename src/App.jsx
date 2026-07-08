@@ -178,6 +178,30 @@ export default function App() {
     }
   }, [isLoaded]);
 
+  // Handle sidebar responsiveness across desktop and mobile
+  useEffect(() => {
+    let prevWidth = window.innerWidth;
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+      // Cross desktop/mobile threshold
+      if (prevWidth <= 768 && currentWidth > 768) {
+        setSidebarOpen(true);
+      } else if (prevWidth > 768 && currentWidth <= 768) {
+        setSidebarOpen(false);
+      }
+      prevWidth = currentWidth;
+    };
+
+    if (window.innerWidth > 768) {
+      setSidebarOpen(true);
+    } else {
+      setSidebarOpen(false);
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const startNewChat = () => {
     const newId = uuidv4();
     const newChat = {
@@ -530,8 +554,12 @@ export default function App() {
         )}
 
         <div className={`app-layout fade-in ${(needRefresh || showUpdateBanner) ? 'with-banner' : ''}`}>
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+          {/* Mobile Sidebar Overlay */}
+          {sidebarOpen && (
+            <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+          )}
+          {/* Sidebar */}
+          <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
             <Bot size={24} color="#3b82f6" />
@@ -560,6 +588,7 @@ export default function App() {
                   setCurrentChatId(chat.id);
                   setSidebarOpen(false);
                 }}
+                title={chat.title}
               >
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0}}>
                   <MessageSquare size={16} />
@@ -578,9 +607,11 @@ export default function App() {
       <div className="app-container">
         <header className="header">
           <div className="header-left">
-            <button className="menu-toggle" onClick={() => setSidebarOpen(true)}>
-              <Menu size={24} />
-            </button>
+            {!sidebarOpen && (
+              <button className="menu-toggle" onClick={() => setSidebarOpen(true)}>
+                <Menu size={24} />
+              </button>
+            )}
             <img src="/logo.svg" alt="CruzOps Logo" style={{width: 32, height: 32, marginRight: '8px'}} />
             <h1>CruzOps AI</h1>
           </div>

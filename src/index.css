@@ -135,17 +135,27 @@ body::before {
 }
 
 .sidebar {
-  width: 260px;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
   flex-shrink: 0;
   background: rgba(8, 12, 24, 0.55);
-  border-right: 1px solid rgba(168, 85, 247, 0.15);
+  border-right: 0 solid transparent;
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, border-color 0.3s ease;
   z-index: 50;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+}
+
+.sidebar.open {
+  width: 260px;
+  opacity: 1;
+  pointer-events: auto;
+  border-right: 1px solid rgba(168, 85, 247, 0.15);
 }
 
 .sidebar-header {
@@ -335,12 +345,21 @@ body::before {
 }
 
 .menu-toggle {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--text-main);
   cursor: pointer;
   padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
 }
 
 @media (max-width: 768px) {
@@ -349,13 +368,18 @@ body::before {
     left: 0;
     top: 0;
     bottom: 0;
+    width: 260px;
     transform: translateX(-100%);
+    opacity: 1;
+    pointer-events: auto;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid rgba(168, 85, 247, 0.15);
   }
   .sidebar.open {
     transform: translateX(0);
-  }
-  .menu-toggle {
-    display: block;
+    width: 260px;
+    opacity: 1;
+    pointer-events: auto;
   }
   .message {
     max-width: 95%;
@@ -917,4 +941,44 @@ body::before {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.4);
+}
+
+/* Mobile Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 45; /* Just below sidebar (z-index: 50) */
+    animation: fadeIn 0.2s ease-out;
+  }
 }

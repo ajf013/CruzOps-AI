@@ -982,3 +982,380 @@ body::before {
     animation: fadeIn 0.2s ease-out;
   }
 }
+
+/* Sidebar Search & Renaming Controls */
+.search-container {
+  padding: 0 1rem 0.75rem 1rem;
+}
+
+.sidebar-search {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.sidebar-search:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.no-chats-msg {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.chat-rename-input {
+  width: 100%;
+  background: rgba(8, 12, 24, 0.7);
+  border: 1px solid var(--secondary);
+  border-radius: 0.4rem;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.chat-rename-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.edit-chat-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 0.4rem;
+  opacity: 0.4;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-item:hover .edit-chat-btn,
+.chat-item.active .edit-chat-btn {
+  opacity: 1;
+}
+
+.edit-chat-btn:hover {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+/* Code Block Buttons & Validation Styling */
+.code-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s;
+}
+
+.code-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.validation-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+  gap: 0.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.validation-alert.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #a7f3d0;
+}
+
+.validation-alert.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.close-validation {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.close-validation:hover {
+  color: white;
+}
+
+/* Export Dropdown Menu */
+.export-toggle-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.export-toggle-btn:hover {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: var(--secondary);
+  color: white;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+.export-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: rgba(10, 15, 30, 0.95);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 200px;
+  z-index: 100;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(168, 85, 247, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.export-dropdown button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.export-dropdown button:hover {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+/* Beautiful PDF/Print Media Queries */
+@media print {
+  .sidebar,
+  .sidebar-overlay,
+  .header,
+  .input-area,
+  .update-banner,
+  .new-chat-btn,
+  .copy-btn,
+  .code-action-btn,
+  .edit-btn,
+  .stop-btn,
+  .privacy-disclaimer {
+    display: none !important;
+  }
+  
+  body, html {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  #root,
+  .app-layout,
+  .app-container,
+  .chat-container {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+  
+  .message-wrapper {
+    display: block !important;
+    width: 100% !important;
+    page-break-inside: avoid;
+    margin-bottom: 2rem !important;
+  }
+  
+  .message {
+    max-width: 100% !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: black !important;
+    padding: 0 !important;
+  }
+  
+  .message-wrapper.user .message::before {
+    content: "👤 User Prompt:\n";
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.25rem;
+  }
+
+  .message-wrapper.assistant .message::before {
+    content: "🤖 Azure Assistant Response:\n";
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.25rem;
+  }
+  
+  .code-wrapper {
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    color: black !important;
+    page-break-inside: avoid;
+  }
+  
+  .code-header {
+    background: #e5e7eb !important;
+    color: black !important;
+    border-bottom: 1px solid #d1d5db !important;
+  }
+  
+  pre, code {
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+  }
+}
+
+/* KQL Query Schema Visualizer */
+.kql-visualizer {
+  background: rgba(10, 15, 30, 0.4);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+  font-family: 'Inter', sans-serif;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.visualizer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.visualizer-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.15rem;
+  display: flex;
+  align-items: center;
+}
+
+.visualizer-close:hover {
+  color: white;
+}
+
+.visualizer-table-wrapper {
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+}
+
+.visualizer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.visualizer-table th {
+  padding: 0.4rem 0.6rem;
+  color: var(--secondary);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.visualizer-table td {
+  padding: 0.4rem 0.6rem;
+  color: var(--text-main);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.visualizer-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.preview-val {
+  font-family: 'Courier New', Courier, monospace;
+  color: #93c5fd !important;
+}
+
+@media print {
+  .kql-visualizer {
+    background: transparent !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+  .visualizer-header {
+    background: #e5e7eb !important;
+    color: black !important;
+  }
+  .visualizer-close {
+    display: none !important;
+  }
+  .visualizer-table th {
+    color: black !important;
+    border-bottom: 1px solid #ccc !important;
+  }
+  .preview-val {
+    color: black !important;
+  }
+}

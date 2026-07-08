@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell, Trash2, Lock, ShieldCheck } from 'lucide-react';
+import { Send, Check, Copy, Bot, User, Menu, Plus, MessageSquare, X, Edit, Paperclip, Bell, Trash2, Lock, ShieldCheck, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { AzureOpenAI } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
-import { saveChatToAzure, loadChatsFromAzure, deleteChatFromAzure } from './services/azureStorage';
+import { saveChatToAzure, loadChatsFromAzure, deleteChatFromAzure, syncOfflineQueue } from './services/azureStorage';
 import { SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react';
 import { dark } from '@clerk/themes';
 
@@ -42,6 +42,11 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef(null);
   
   // Credentials State
   const [endpoint, setEndpoint] = useState(import.meta.env.VITE_AZURE_OPENAI_ENDPOINT || '');
@@ -118,6 +123,11 @@ export default function App() {
       if (localArray.length > 0) {
         setChats(localArray);
         setCurrentChatId(localArray[0].id);
+      }
+
+      // Sync offline changes first if online
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        await syncOfflineQueue(userId);
       }
 
       // 2. Background sync from Azure
@@ -201,6 +211,28 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Click outside listener for the Export dropdown menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Connection recovery sync
+  useEffect(() => {
+    if (!userId) return;
+    const handleOnline = () => {
+      console.log("Device is online. Triggering offline sync queue...");
+      syncOfflineQueue(userId);
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [userId]);
 
   const startNewChat = () => {
     const newId = uuidv4();
@@ -327,6 +359,44 @@ export default function App() {
     }
   };
 
+  const handleRenameChat = async (chatId, newTitle) => {
+    if (!newTitle.trim()) return;
+    setChats(prev => prev.map(c => {
+      if (c.id === chatId) {
+        const updatedChat = { ...c, title: newTitle.trim() };
+        if (userId) {
+          saveChatToAzure(chatId, updatedChat.title, c.messages, userId);
+        }
+        return updatedChat;
+      }
+      return c;
+    }));
+    setEditingChatId(null);
+  };
+
+  const handleExportMarkdown = () => {
+    setShowExportMenu(false);
+    let mdContent = `# Chat Session: ${currentChat.title}\n\n`;
+    currentChat.messages.forEach(msg => {
+      const roleName = msg.role === 'user' ? 'User' : 'Assistant';
+      mdContent += `### 👤 ${roleName}\n\n${msg.content}\n\n---\n\n`;
+    });
+    const blob = new Blob([mdContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentChat.title.replace(/\s+/g, '_')}_chat.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    setShowExportMenu(false);
+    window.print();
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -421,26 +491,212 @@ export default function App() {
   const CodeBlock = ({ node, inline, className, children, ...props }) => {
     const match = /language-(\w+)/.exec(className || '');
     const [copied, setCopied] = useState(false);
+    const [validationResult, setValidationResult] = useState(null);
+    const [showKqlPreview, setShowKqlPreview] = useState(false);
 
     const handleCopy = () => {
       navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     };
+
+    const handleDownload = () => {
+      const codeStr = String(children).replace(/\n$/, '');
+      const extensions = {
+        powershell: 'ps1', ps1: 'ps1',
+        bash: 'sh', sh: 'sh', azurecli: 'sh', shell: 'sh',
+        kusto: 'kusto', kql: 'kusto',
+        json: 'json',
+        markdown: 'md', md: 'md'
+      };
+      const ext = extensions[language] || 'txt';
+      const mimeType = ext === 'json' ? 'application/json' : 'text/plain';
+      const blob = new Blob([codeStr], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `script.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    const handleValidate = () => {
+      const codeStr = String(children).replace(/\n$/, '');
+      let result = { success: true, message: 'Syntax looks correct!' };
+      
+      if (language === 'powershell' || language === 'ps1') {
+        const openBraces = (codeStr.match(/\{/g) || []).length;
+        const closeBraces = (codeStr.match(/\}/g) || []).length;
+        const openParens = (codeStr.match(/\(/g) || []).length;
+        const closeParens = (codeStr.match(/\)/g) || []).length;
+        const singleQuotes = (codeStr.match(/'/g) || []).length;
+        const doubleQuotes = (codeStr.match(/"/g) || []).length;
+        
+        if (openBraces !== closeBraces) {
+          result = { success: false, message: `Unbalanced curly braces: { is ${openBraces}, } is ${closeBraces}.` };
+        } else if (openParens !== closeParens) {
+          result = { success: false, message: `Unbalanced parentheses: ( is ${openParens}, ) is ${closeParens}.` };
+        } else if (singleQuotes % 2 !== 0) {
+          result = { success: false, message: 'Unbalanced single quotes detected.' };
+        } else if (doubleQuotes % 2 !== 0) {
+          result = { success: false, message: 'Unbalanced double quotes detected.' };
+        } else if (!codeStr.toLowerCase().includes('connect-azaccount')) {
+          result = { success: true, message: 'Warning: Connect-AzAccount was not found at the start of the script.' };
+        }
+      } else if (language === 'bash' || language === 'sh' || language === 'azurecli' || language === 'shell') {
+        const singleQuotes = (codeStr.match(/'/g) || []).length;
+        const doubleQuotes = (codeStr.match(/"/g) || []).length;
+        
+        if (singleQuotes % 2 !== 0) {
+          result = { success: false, message: 'Unbalanced single quotes detected.' };
+        } else if (doubleQuotes % 2 !== 0) {
+          result = { success: false, message: 'Unbalanced double quotes detected.' };
+        } else {
+          const lines = codeStr.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.trim().endsWith('\\') && line.endsWith(' ')) {
+               result = { success: false, message: `Line ${i + 1} ends in a backslash followed by a space. Remove the trailing space.` };
+               break;
+            }
+          }
+        }
+      }
+      
+      setValidationResult(result);
+    };
+
+    const parseKqlColumns = (query) => {
+      const columns = [];
+      const lines = query.split('\n');
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('|') || trimmed.startsWith('project') || trimmed.startsWith('extend')) {
+          let content = trimmed.replace(/^\|\s*/, '');
+          if (content.startsWith('project-') || content.startsWith('project ')) {
+            content = content.replace(/^project(-reorder|-keep)?\s+/, '');
+            const parts = content.split(',');
+            parts.forEach(part => {
+              const cleanPart = part.trim();
+              if (cleanPart) {
+                const aliasMatch = cleanPart.match(/^([\w\.\d]+)\s*=/);
+                if (aliasMatch) {
+                  columns.push(aliasMatch[1]);
+                } else {
+                  const colName = cleanPart.split(' ')[0].split('=')[0].trim();
+                  if (colName && !colName.includes('(') && !colName.includes(')')) {
+                    columns.push(colName);
+                  }
+                }
+              }
+            });
+          } else if (content.startsWith('extend ')) {
+            content = content.replace(/^extend\s+/, '');
+            const parts = content.split(',');
+            parts.forEach(part => {
+              const cleanPart = part.trim();
+              if (cleanPart) {
+                const aliasMatch = cleanPart.match(/^([\w\.\d]+)\s*=/);
+                if (aliasMatch) {
+                  columns.push(aliasMatch[1]);
+                }
+              }
+            });
+          }
+        }
+      });
+      const uniqueCols = [...new Set(columns)];
+      return uniqueCols.length > 0 ? uniqueCols : ['name', 'type', 'resourceGroup', 'subscriptionId', 'location'];
+    };
+
     const language = match ? match[1] : 'text';
+    const showValidate = ['powershell', 'ps1', 'bash', 'sh', 'azurecli', 'shell'].includes(language);
+    const isKql = ['kusto', 'kql'].includes(language);
+    const kqlColumns = isKql ? parseKqlColumns(String(children).replace(/\n$/, '')) : [];
 
     if (!inline && match) {
       return (
         <div className="code-wrapper">
           <div className="code-header">
             <span>{language}</span>
-            <div style={{position: 'relative'}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative'}}>
               {copied && <span className="copy-feedback">Text copied to clipboard</span>}
-              <button className="copy-btn" onClick={handleCopy}>
+              {showValidate && (
+                <button className="code-action-btn" onClick={handleValidate} title="Validate syntax">
+                  Validate
+                </button>
+              )}
+              {isKql && (
+                <button className="code-action-btn" onClick={() => setShowKqlPreview(!showKqlPreview)} title="Preview Schema">
+                  Preview Schema
+                </button>
+              )}
+              <button className="code-action-btn" onClick={handleDownload} title="Download script">
+                <Download size={14} />
+              </button>
+              <button className="copy-btn" onClick={handleCopy} title="Copy code">
                 {copied ? <Check size={16} color="#4ade80" /> : <Copy size={16} />}
               </button>
             </div>
           </div>
+          {validationResult && (
+            <div className={`validation-alert ${validationResult.success ? 'success' : 'error'}`}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                {validationResult.success ? <CheckCircle2 size={14} color="#4ade80" /> : <AlertCircle size={14} color="#f87171" />}
+                <span>{validationResult.message}</span>
+              </div>
+              <button className="close-validation" onClick={() => setValidationResult(null)}>
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {showKqlPreview && isKql && (
+            <div className="kql-visualizer">
+              <div className="visualizer-header">
+                <span>📋 Projected Resource Schema Preview</span>
+                <button className="visualizer-close" onClick={() => setShowKqlPreview(false)}>
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="visualizer-table-wrapper">
+                <table className="visualizer-table">
+                  <thead>
+                    <tr>
+                      {kqlColumns.map((col, idx) => (
+                        <th key={idx}>{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {kqlColumns.map((col, idx) => (
+                        <td key={idx} className="preview-val">
+                          {col === 'name' ? 'demo-resource' :
+                           col === 'type' ? 'microsoft.compute/virtualmachines' :
+                           col === 'resourceGroup' ? 'rg-production' :
+                           col === 'location' ? 'eastus' :
+                           col === 'subscriptionId' ? 'sub-0000-1111-2222' : 'sample-data'}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      {kqlColumns.map((col, idx) => (
+                        <td key={idx} className="preview-val">
+                          {col === 'name' ? 'demo-app-service' :
+                           col === 'type' ? 'microsoft.web/sites' :
+                           col === 'resourceGroup' ? 'rg-staging' :
+                           col === 'location' ? 'westeurope' :
+                           col === 'subscriptionId' ? 'sub-0000-1111-2222' : 'sample-data'}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
           <SyntaxHighlighter
             style={vscDarkPlus}
             language={language}
@@ -455,6 +711,10 @@ export default function App() {
     }
     return <code className={className} {...props}>{children}</code>;
   };
+
+  const filteredChats = chats.filter(chat => 
+    chat.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="app-container">
@@ -572,31 +832,86 @@ export default function App() {
         <button className="new-chat-btn" onClick={startNewChat}>
           <Plus size={18} /> New Chat
         </button>
+        <div className="search-container">
+          <input 
+            type="text" 
+            placeholder="Search history..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="sidebar-search"
+          />
+        </div>
         <div className="chat-list">
-          {!isLoaded || (chats.length === 0 && !currentChatId) ? (
+          {!isLoaded ? (
             <>
               <div className="skeleton-row" />
               <div className="skeleton-row" />
               <div className="skeleton-row" />
             </>
+          ) : chats.length === 0 ? (
+            <div className="no-chats-msg">No chats found. Click "New Chat" to begin!</div>
+          ) : filteredChats.length === 0 ? (
+            <div className="no-chats-msg">No matches found for "{searchTerm}"</div>
           ) : (
-            chats.map(chat => (
+            filteredChats.map(chat => (
               <div 
                 key={chat.id} 
                 className={`chat-item ${currentChatId === chat.id ? 'active' : ''}`}
                 onClick={() => {
-                  setCurrentChatId(chat.id);
-                  setSidebarOpen(false);
+                  if (editingChatId !== chat.id) {
+                    setCurrentChatId(chat.id);
+                    setSidebarOpen(false);
+                  }
                 }}
-                title={chat.title}
+                title={editingChatId === chat.id ? undefined : chat.title}
               >
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0}}>
-                  <MessageSquare size={16} />
-                  <span>{chat.title}</span>
-                </div>
-                <button className="delete-chat-btn" onClick={(e) => handleDeleteChat(e, chat.id)} title="Delete chat">
-                  <Trash2 size={16} />
-                </button>
+                {editingChatId === chat.id ? (
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0}} onClick={(e) => e.stopPropagation()}>
+                    <input 
+                      type="text" 
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleRenameChat(chat.id, editTitle);
+                        } else if (e.key === 'Escape') {
+                          setEditingChatId(null);
+                        }
+                      }}
+                      onBlur={() => handleRenameChat(chat.id, editTitle)}
+                      autoFocus
+                      className="chat-rename-input"
+                    />
+                  </div>
+                ) : (
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0}}>
+                    <MessageSquare size={16} />
+                    <span>{chat.title}</span>
+                  </div>
+                )}
+                
+                {editingChatId !== chat.id && (
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem'}}>
+                    <button 
+                      className="edit-chat-btn" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingChatId(chat.id);
+                        setEditTitle(chat.title);
+                      }} 
+                      title="Rename chat"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      className="delete-chat-btn" 
+                      onClick={(e) => handleDeleteChat(e, chat.id)} 
+                      title="Delete chat"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -615,7 +930,20 @@ export default function App() {
             <img src="/logo.svg" alt="CruzOps Logo" style={{width: 32, height: 32, marginRight: '8px'}} />
             <h1>CruzOps AI</h1>
           </div>
-          <div className="header-right" style={{display: 'flex', alignItems: 'center'}}>
+          <div className="header-right" style={{display: 'flex', alignItems: 'center', gap: '1rem'}} ref={exportMenuRef}>
+            {currentChat.messages.length > 0 && (
+              <div style={{position: 'relative'}}>
+                <button className="export-toggle-btn" onClick={() => setShowExportMenu(!showExportMenu)}>
+                  Export
+                </button>
+                {showExportMenu && (
+                  <div className="export-dropdown">
+                    <button onClick={handleExportMarkdown}>Export as Markdown (.md)</button>
+                    <button onClick={handleExportPDF}>Export as PDF / Print</button>
+                  </div>
+                )}
+              </div>
+            )}
             <UserButton 
               afterSignOutUrl="/" 
               appearance={{

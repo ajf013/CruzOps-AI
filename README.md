@@ -8,6 +8,12 @@ CruzOps AI is a premium, enterprise-grade Web Application built to function as a
 
 - **Multi-Provider Authentication**: Fully secured with **Clerk** (custom themed dark-mode), allowing seamless login via Google, Microsoft, Apple, or GitHub.
 - **Cross-Device Syncing**: Chat history is persistently stored in **Azure Table Storage**. Start a session on one device and resume it on any other after logging in.
+- **Offline IndexedDB Sync Engine**: Full offline capabilities caching chats locally inside IndexedDB. Changes, deletions, and new chats created offline are queued and auto-synced back to Azure storage upon network reconnection.
+- **Interactive Sidebar UX**: Instantly filter past histories with a fuzzy sidebar search box, and manually rename any session title inline with quick double-click/edit inputs.
+- **Code Block Utilities & Downloads**: One-click download button dynamically saving scripts as `.ps1`, `.sh`, `.json`, `.kusto`, or `.md` depending on code blocks.
+- **Local Script Syntax Validator**: Dry-run parsing checks unbalanced parentheses, curly braces, and quotes inside PowerShell/Bash scripts, verifying `Connect-AzAccount` configurations on the fly.
+- **KQL Schema Visualizer**: Extracts projected columns (`project` / `extend` statements) from KQL queries and displays a mockup table previewing columns and sample values.
+- **Markdown & PDF Exports**: Export chats to standard Markdown or print them to physical papers or formatted PDFs via customized `@media print` layout overrides.
 - **Auto-Authentication**: Every generated PowerShell script automatically includes `Connect-AzAccount` for immediate usability.
 - **Bot Control**: Take control of the AI with a "Stop" button to cancel generation mid-stream.
 - **Message Editing**: Correct or refine your prompts easily with the in-chat edit feature.
@@ -47,7 +53,8 @@ graph TD
     UI --> |Prompts for Script| OpenAI["🧠 Azure OpenAI (gpt-4o)"]
     OpenAI -.-> |Streams Response| UI
     
-    UI --> |Background Sync| TableStorage[("☁️ Azure Table Storage")]
+    UI --> |Instant Cache & Queue| IDB[("💾 Local IndexedDB")]
+    IDB --> |Background Sync| TableStorage[("☁️ Azure Table Storage")]
 
     subgraph "Governance & Automation"
         AA["🤖 Azure Automation Account"]
@@ -57,6 +64,7 @@ graph TD
     
     subgraph "Local Environment"
         UI
+        IDB
     end
     
     subgraph "Cloud Services"
@@ -119,7 +127,8 @@ cruzops-ai/
     ├── App.jsx                # Core Chat UI, Sidebar & Streaming Logic
     ├── index.css              # Glassmorphism Dark Mode Styling
     ├── services/
-    │   └── azureStorage.js    # Azure Table Storage Sync Logic
+    │   ├── azureStorage.js    # Azure Table Storage Sync Logic
+    │   └── indexedDB.js       # Offline Caching Database & Queue Sync Logic
     └── automation/            # Cloud Governance Scripts
         ├── Check-AppExpiry.ps1 # PowerShell Runbook for Secret Monitoring
         └── README.md          # Automation Setup Guide
